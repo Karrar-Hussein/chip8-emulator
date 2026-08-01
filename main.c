@@ -6,19 +6,23 @@
 
 #define MEMSIZE 4096
 #define PROGRAM_START 0x200
-#define WINDOW_WIDTH 64
-#define WINDOW_HEIGHT 32
+#define WINDOW_WIDTH 64 * 10
+#define WINDOW_HEIGHT 32 * 10
+#define FRAMERATE 1000 / 30
 
 
-// static SDL_Window *window = NULL;
-// static SDL_Renderer *renderer = NULL;
+void decimalToBinary(uint8_t num, uint8_t binary_arr[]);
+void swap(uint8_t *a, uint8_t *b);
+
+static SDL_Window *window = NULL;
+static SDL_Renderer *renderer = NULL;
 
 int main(void){
     FILE *fptr;
     uint8_t mem[MEMSIZE];
     uint8_t registers[16];
     uint8_t *index_register;
-    Stack *stack = create_stack(16);
+    // Stack *stack = create_stack(16);
     uint8_t font[80] = 
         {
                 0xF0, 0x90, 0x90, 0x90, 0xF0,
@@ -45,35 +49,26 @@ int main(void){
     uint8_t *pC = &mem[PROGRAM_START];
     uint8_t *pI = &mem[PROGRAM_START];
     uint16_t opcode;
-    uint16_t nibble[4];
+    uint16_t nibble[4] = {0};
     int ch;
 
     // load the program into memory starting at address 200 (512 in decimal). 
     fptr = fopen("IBM_Logo.ch8", "rb");
     while((ch = fgetc(fptr)) != EOF){
-        // printf("%.2x ", ch);
         *pI++ = ch;
     }
     fclose(fptr);
 
     //TODO: Implement the display and the DXYN instrucion
-    // // init window
+
     // SDL_Init(SDL_INIT_VIDEO);
     // window = SDL_CreateWindow("IBM Logo", WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     // renderer = SDL_CreateRenderer(window, NULL);
     //
-    // //draw and update frame
-    // SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
-    // SDL_RenderClear(renderer);
-    // SDL_RenderPresent(renderer);
-    // //clean up
-    // SDL_DestroyRenderer(renderer);
-    // SDL_DestroyWindow(window);
-    // SDL_Quit();
-    //
-    while(pC != pI){
+   while(pC != pI){
 
         opcode = (*pC << 8) | *(pC + 1);
+        // printf("%x ", opcode);
 
         //Mask out the individuals nibbles
         nibble[0] = opcode & 0xF000;
@@ -88,9 +83,12 @@ int main(void){
                 break;
             case 0x1000:
                 // set pC to NNN 12 bit addresss
+                //  0x0F00 | 0x00F0 | 0x000F = 0FFF
                 pC = &mem[nibble[1] | nibble[2] | nibble[3]];
+                
                 break;
             case 0x6000:
+                //6XNN
                 // Simply set the register VX to the value NN.
                 registers[nibble[1]] = nibble[2] | nibble[4];
                 break;
@@ -103,13 +101,70 @@ int main(void){
                 index_register = &mem[nibble[1] | nibble[2] | nibble[3]];
                 break;
             case 0xd000:
+                // DXYN 
                 // the drawing instruction
+                // the index register holds an 8 bit sprite thats drawn horizantly
+                // drawn by treating 0 bits as transparent, and all the 1 bits will “flip”
+
+                uint8_t frameBuffer[8];
+                SDL_FRect rects[8];
+                float x = registers[nibble[1]];
+                float y = registers[nibble[2]];
+                printf("(%f, %f)\n", x, y);
+
+                decimalToBinary((uint8_t)*index_register, frameBuffer);
+
+                // for (int i=0; i<8; i++){
+                //     if (framebuffer[i] = 1){
+                //         rects[i] = {}
+                //     }
+                // }
+
+
+                SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
+                SDL_RenderClear(renderer);
+
+
+
+                SDL_RenderPresent(renderer);
                 break;
             default:
                 break;
         }
     }
 
+    SDL_Delay(2000);
+
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 
     return 0;
+}
+
+void decimalToBinary(uint8_t num, uint8_t binary_arr[]){
+    int i = 0;
+    uint8_t remainder = 0;
+    uint8_t divisor = 2;
+    int left, right;
+
+    while (num > 0){
+        remainder = num % divisor;
+        num = num / divisor;
+        binary_arr[i] = remainder;
+        i++;
+    }
+    left = 0;
+    right = i -1;
+    while(left < right){
+        swap(&binary_arr[left], &binary_arr[right]);
+        left++;
+        right--;
+    }
+}
+
+void swap(uint8_t *a, uint8_t *b){
+    uint8_t temp = *a;
+    *a = *b;
+    *b = temp;
 }
