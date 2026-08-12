@@ -9,6 +9,7 @@
 #define WINDOW_WIDTH 64 * 10
 #define WINDOW_HEIGHT 32 * 10
 #define FRAMERATE 1000 / 30
+#define SPRITE_LEN 8
 
 
 void decimalToBinary(uint8_t num, uint8_t binary_arr[]);
@@ -53,7 +54,7 @@ int main(void){
     int ch;
 
     // load the program into memory starting at address 200 (512 in decimal). 
-    fptr = fopen("IBM_Logo.ch8", "rb");
+    fptr = fopen("Splash.ch8", "rb");
     while((ch = fgetc(fptr)) != EOF){
         *pI++ = ch;
     }
@@ -61,10 +62,10 @@ int main(void){
 
     //TODO: Implement the display and the DXYN instrucion
 
-    // SDL_Init(SDL_INIT_VIDEO);
-    // window = SDL_CreateWindow("IBM Logo", WINDOW_WIDTH, WINDOW_HEIGHT, 0);
-    // renderer = SDL_CreateRenderer(window, NULL);
-    //
+    SDL_Init(SDL_INIT_VIDEO);
+    window = SDL_CreateWindow("IBM Logo", WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+    renderer = SDL_CreateRenderer(window, NULL);
+
    while(pC != pI){
 
         opcode = (*pC << 8) | *(pC + 1);
@@ -72,6 +73,7 @@ int main(void){
 
         //Mask out the individuals nibbles
         nibble[0] = opcode & 0xF000;
+                    // FFFF & 0F000 = 
         nibble[1] = opcode & 0x0F00;
         nibble[2] = opcode & 0x00F0;
         nibble[3] = opcode & 0x000F;
@@ -79,22 +81,28 @@ int main(void){
 
         switch (opcode & 0xF000){
             case 0x0000:
-                // clear the display.
+               // clear the display.
+                // SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
+                // SDL_RenderClear(renderer);
                 break;
             case 0x1000:
                 // set pC to NNN 12 bit addresss
                 //  0x0F00 | 0x00F0 | 0x000F = 0FFF
+                //
                 pC = &mem[nibble[1] | nibble[2] | nibble[3]];
-                
                 break;
             case 0x6000:
                 //6XNN
+                //6101 = reg[1] = 00000001 = 1
+                //6010 = reg[0] = 
                 // Simply set the register VX to the value NN.
-                registers[nibble[1]] = nibble[2] | nibble[4];
+                nibble[1] >>= 8;
+                registers[nibble[1]] = (uint8_t)nibble[2] | nibble[3];
+                // printf("opcode: %x\nreg[%d] = %d , %d\n", opcode, nibble[1], registers[nibble[1]], (uint8_t)nibble[2] | nibble[3]);
                 break;
             case 0x7000:
                 // Add the value NN to VX.
-                registers[nibble[1]] += nibble[2] | nibble[4];
+                registers[nibble[1]] += (uint8_t)nibble[2] | nibble[3];
                 break;
             case 0xa000:
                 // This sets the index register I to the value NNN.
@@ -106,35 +114,45 @@ int main(void){
                 // the index register holds an 8 bit sprite thats drawn horizantly
                 // drawn by treating 0 bits as transparent, and all the 1 bits will “flip”
 
-                uint8_t frameBuffer[8];
+                uint8_t frameBuffer[SPRITE_LEN] = {0};
                 SDL_FRect rects[8];
+                nibble[1] >>= 8;
+                nibble[2] >>= 4;
                 float x = registers[nibble[1]];
                 float y = registers[nibble[2]];
-                printf("(%f, %f)\n", x, y);
+                // fprintf(stderr, "(%f, %f) ", x, y);
 
-                decimalToBinary((uint8_t)*index_register, frameBuffer);
+                decimalToBinary(*index_register, frameBuffer);
 
-                // for (int i=0; i<8; i++){
-                //     if (framebuffer[i] = 1){
-                //         rects[i] = {}
-                //     }
-                // }
+                for (int i=0; i<SPRITE_LEN; i++){
+                    rects[i].x = x++;
+                    rects[i].y = y;
+                    rects[i].w = 10.0;
+                    rects[i].h = 10.0;
+                    // printf("%d", frameBuffer[i]);
+                }
 
 
                 SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
                 SDL_RenderClear(renderer);
 
 
+                SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE);
+                SDL_RenderRects(renderer, rects, 8);
 
                 SDL_RenderPresent(renderer);
                 break;
             default:
                 break;
         }
+        // for (int i=0; i<16;i++){
+        //     printf("reg[%d] = %d\n", i, registers[i]);
+        // }
+        SDL_Delay(1000 / 700);
     }
 
-    SDL_Delay(2000);
-
+    // SDL_Delay(2000);
+    //
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -147,6 +165,7 @@ void decimalToBinary(uint8_t num, uint8_t binary_arr[]){
     uint8_t remainder = 0;
     uint8_t divisor = 2;
     int left, right;
+    printf("num: %3.d  ", num);
 
     while (num > 0){
         remainder = num % divisor;
@@ -155,7 +174,7 @@ void decimalToBinary(uint8_t num, uint8_t binary_arr[]){
         i++;
     }
     left = 0;
-    right = i -1;
+    right = SPRITE_LEN - 1;
     while(left < right){
         swap(&binary_arr[left], &binary_arr[right]);
         left++;
