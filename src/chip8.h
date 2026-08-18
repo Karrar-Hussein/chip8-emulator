@@ -2,6 +2,7 @@
 #define CHIP8_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define MEMSIZE 4096
 #define PROGRAM_START 0x200
@@ -16,9 +17,9 @@ typedef struct {
 
 } Chip8;
 
-bool chip8_init(Chip8 data);
-bool chip8_load_rom(Chip8 data, char *path);
-void chip8_emulate_cycle(Chip8 data);
+bool chip8_init(Chip8 *data);
+bool chip8_load_rom(Chip8 *data, char *path);
+void chip8_emulate_cycle(Chip8 *data);
 
 
 #endif

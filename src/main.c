@@ -9,6 +9,7 @@ static SDL_Renderer *renderer = NULL;
 
 int main(void){
     Chip8 chip8 = {{0}, {0}, 0, 0, 0};
+    char run = 0;
 
     chip8_init(&chip8);
 

@@ -1,12 +1,12 @@
+#include "chip8.h"
 #include "stack.h"
-#include <stdint.h>
 
 
 void decimalToBinary(uint8_t num, uint8_t binary_arr[]);
+void swap(uint8_t *a, uint8_t *b);
+
 
 bool chip8_init(Chip8 *data){
-    data->mem = {0};
-    data->data->registers = {0};
     uint8_t font[80] = 
         {
                 0xF0, 0x90, 0x90, 0x90, 0xF0,
@@ -41,21 +41,21 @@ bool chip8_load_rom(Chip8 *data, char *path){
     int ch = 7;
     int p_end = data->pC;
 
-    if (!fptr = fopen(path, "rb")){
+    if (fptr = fopen(path, "rb")){
         return false;
     }
 
     while((ch = fgetc(fptr)) != EOF){
-        data->mem[data->p_end++] = ch;
+        data->mem[p_end++] = ch;
     }
 
     fclose(fptr);
-    return true
+    return true;
 }
 
 void chip8_emulate_cycle(Chip8 *data){
-    opcode = (data->mem[data->pC] << 8) | (data->mem[data->pC + 1]));
-    uint8_t nibble[4];
+    uint16_t opcode = (data->mem[data->pC] << 8) | (data->mem[data->pC + 1]);
+    uint16_t nibble[4];
 
     //Mask out the individuals nibbles
     nibble[0] = opcode & 0xF000;
@@ -120,7 +120,7 @@ void decimalToBinary(uint8_t num, uint8_t binary_arr[]){
         i++;
     }
     left = 0;
-    right = SPRITE_LEN - 1;
+    right = 8 - 1;
     while(left < right){
         swap(&binary_arr[left], &binary_arr[right]);
         left++;
