@@ -16,7 +16,7 @@ endif()
 
 # Create your game executable target as usual
 add_executable(${PROJECT_NAME})
-target_sources(${PROJECT_NAME} PRIVATE main.c stack.c)
+target_sources(${PROJECT_NAME} PRIVATE main.c chip8.c stack.c)
 
 # Link to the actual SDL3 library.
 target_link_libraries(chip8 PRIVATE SDL3::SDL3)
