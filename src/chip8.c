@@ -154,16 +154,17 @@ void decimalToBinary(uint8_t num, uint8_t binary_arr[]){
     while (num > 0){
         remainder = num % divisor;
         num = num / divisor;
-        binary_arr[i] = remainder;
+        binary_arr[8-i] = remainder;
         i++;
     }
-    left = 0;
-    right = 8 - 1;
-    while(left < right){
-        swap(&binary_arr[left], &binary_arr[right]);
-        left++;
-        right--;
-    }
+    // is this needed so you doing it this way ?
+    // left = 0;
+    // right = 8 - 1;
+    // while(left < right){
+    //     swap(&binary_arr[left], &binary_arr[right]);
+    //     left++;
+    //     right--;
+    // }
 }
 
 void swap(uint8_t *a, uint8_t *b){

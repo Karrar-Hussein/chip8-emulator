@@ -13,7 +13,7 @@ static SDL_Renderer *renderer = NULL;
 void quit();
 
 
-int main(void){
+int main(int argc, char** argv){
     Chip8 chip8 = {{0}, {0}, 0, 0, 0};
     SDL_Texture *pTexture;
     char run = 1;
@@ -30,8 +30,16 @@ int main(void){
 
     chip8_init(&chip8);
 
-    //TODO: grab Rom Path from command line arguments
-    chip8_load_rom(&chip8, "roms/IBM_Logo.ch8");
+    // assumes first argument is rom file path
+    if (argc > 1) {
+        char* romFilePath = argv[1];
+        fprintf(stdout, "Processing rom file: %s\n", romFilePath);
+        chip8_load_rom(&chip8, romFilePath);
+    }
+    else {
+        // default fallback
+        chip8_load_rom(&chip8, "roms/Splash.ch8");
+    }
 
     pTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 64, 32);
     SDL_SetTextureScaleMode(pTexture, SDL_SCALEMODE_NEAREST);
