@@ -1,4 +1,3 @@
 *.o
-*.ch8
 build/
 vendored
