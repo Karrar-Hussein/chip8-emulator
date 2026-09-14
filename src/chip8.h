@@ -1,5 +1,5 @@
 #ifndef CHIP8_H
-#define CHIP8_H
+#define CHIP8_H 1
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -11,9 +11,9 @@
 typedef struct {
     uint8_t mem[MEMSIZE];
     uint8_t registers[16];
-    uint8_t index_register;
-    uint8_t pC;
-    uint8_t frameBuffer[64*32];
+    uint16_t index_register;
+    uint16_t pC;
+    uint32_t frameBuffer[64*32];
 
 } Chip8;
 
