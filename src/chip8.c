@@ -11,7 +11,7 @@ void swap(uint8_t *a, uint8_t *b);
 
 bool chip8_init(Chip8 *data){
     uint8_t font[80] = 
-        { // 0x00 ^ 0xF0  = 0xF0
+        {
                 0xF0, 0x90, 0x90, 0x90, 0xF0,
                 0x20, 0x60, 0x20, 0x20, 0x70,
                 0xF0, 0x10, 0xF0, 0x80, 0xF0,
@@ -82,24 +82,90 @@ void chip8_emulate_cycle(Chip8 *data){
     switch (opcode & 0xF000){
         case 0x1000:
             // set pC to NNN 12 bit addresss
-            data->pC = nibble[1] | nibble[2] | nibble[3];
+            data->pC = NNN(opcode);
+            break;
+
+        case 0x2000:
+            // call subroutine at nnn.
+            break;
+
+        case 0x3000:
+            //3xnn
+            //if vx == nn skip
+            if ( data->registers[nibble[1]] == NN(opcode)){
+                data->pC += 2;
+            }
+            break;
+
+        case 0x4000:
+            //4xnn
+            //if vx != nn skip
+            if ( data->registers[nibble[1]] != NN(opcode)){
+                data->pC += 2;
+            }
+            break;
+
+        case 0x5000:
+            //5xy0
+            //if vx == vy skip
+            if ( data->registers[nibble[1]] == data->registers[nibble[2] >> 4]){
+                data->pC += 2;
+            }
             break;
 
         case 0x6000:
             //6XNN
             // Simply set the register VX to the value NN.
-            data->registers[nibble[1] >> 8] = (uint8_t)nibble[2] | nibble[3];
+            data->registers[nibble[1]] = NN(opcode);
             break;
 
         case 0x7000:
             // Add the value NN to VX.
-            data->registers[nibble[1] >> 8] += (uint8_t)nibble[2] | nibble[3];
+            data->registers[nibble[1]] += NN(opcode);
+            break;
+
+        case 0x8000:
+            //8xy0
+            switch (nibble[3]){
+                case 0:
+                    data->registers[nibble[1]] = data->registers[nibble[2]];
+                    break;
+
+                case 1:
+                    data->registers[nibble[1]] |= data->registers[nibble[2]];
+                    break;
+
+                case 2:
+                    data->registers[nibble[1]] &= data->registers[nibble[2]];
+                    break;
+
+                case 3:
+                    data->registers[nibble[1]] ^= data->registers[nibble[2]];
+                    break;
+
+                case 4:
+                    data->registers[nibble[1]] += data->registers[nibble[2]];
+                    break;
+
+                case 5:
+                    data->registers[nibble[1]] -= data->registers[nibble[2]];
+                    break;
+
+                case 6:
+                    break;
+
+                case 7:
+                    data->registers[nibble[1]] = data->registers[nibble[2]] - data->registers[nibble[1]] ;
+                    break;
+
+                case 6:
+                    break;
+            }
             break;
 
         case 0xa000:
             // This sets the index register I to the value NNN.
-            data->index_register = nibble[1] | nibble[2] | nibble[3];
-            printf("\n%x new index register: %x, %d\n", opcode, nibble[1] | nibble[2] | nibble[3], nibble[1] | nibble[2] | nibble[3]);
+            data->index_register = NNN(opcode);
             break;
 
         case 0xd000:
@@ -120,9 +186,9 @@ void chip8_emulate_cycle(Chip8 *data){
                 uint8_t byte_data = data->mem[data->index_register + row];
                 printf("byte = %x\n", byte_data);
                 y++;
-                // printf("%x \n", byte_data);
+
                 for (uint8_t col=0; col < 8; col++){
-                    uint8_t pixel = (byte_data & (0x80>>col)) >> 7 - col;
+                    uint8_t pixel = (byte_data & (0x80>>col)) >> (7 - col);
                     printf("\ni = %d x:%d y:%d\n", x + col + y*64, x, y);
                     data->frameBuffer[x + col + y*64] ^= pixel * 0xffffffff;
                     if (data->frameBuffer[x + col + y*64] & pixel){
