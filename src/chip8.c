@@ -2,6 +2,8 @@
 #include "stack.h"
 #include <string.h>
 
+#define NN(o) (o & 0x00ff)
+#define NNN(o) (o & 0x0fff)
 
 void decimalToBinary(uint8_t num, uint8_t binary_arr[]);
 void swap(uint8_t *a, uint8_t *b);
@@ -69,8 +71,8 @@ void chip8_emulate_cycle(Chip8 *data){
 
     //Mask out the individuals nibbles
     nibble[0] = opcode & 0xF000;
-    nibble[1] = opcode & 0x0F00;
-    nibble[2] = opcode & 0x00F0;
+    nibble[1] = (opcode & 0x0F00) >> 8;
+    nibble[2] = (opcode & 0x00F0) >> 4;
     nibble[3] = opcode & 0x000F;
     data->pC += 2;
 
@@ -106,9 +108,8 @@ void chip8_emulate_cycle(Chip8 *data){
             // the index register holds an 8 bit sprite thats drawn horizantly
             // drawn by treating 0 bits as transparent, and all the 1 bits will “flip”
 
-            //TODO: This instruction should fill the data->frameBuffer with sprite data
-            uint8_t x = data->registers[nibble[1] >> 8];
-            uint8_t y = data->registers[nibble[2] >> 4];
+            uint8_t x = data->registers[nibble[1]];
+            uint8_t y = data->registers[nibble[2]];
             uint8_t sprite_len = nibble[3];
             printf("\nsprite_len = 0x%x , %d\n", nibble[3], nibble[3]);
             x %= 64;
