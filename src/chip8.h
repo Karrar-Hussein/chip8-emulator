@@ -6,6 +6,8 @@
 
 #define MEMSIZE 4096
 #define PROGRAM_START 0x200
+#define EMU_WIDTH 64
+#define EMU_HEIGHT 32
 
 
 typedef struct {

@@ -36,7 +36,7 @@ bool chip8_init(Chip8 *data){
         data->mem[counter++] = font[i];
     }
 
-    // data->frameBuffer[0+64*0] = 0xff0000ff;
+    // data->frameBuffer[0+EMU_WIDTH*0] = 0xff0000ff;
 
     return true;
 }
@@ -108,7 +108,7 @@ void chip8_emulate_cycle(Chip8 *data){
         case 0x5000:
             //5xy0
             //if vx == vy skip
-            if ( data->registers[nibble[1]] == data->registers[nibble[2] >> 4]){
+            if ( data->registers[nibble[1]] == data->registers[nibble[2]]){
                 data->pC += 2;
             }
             break;
@@ -158,7 +158,7 @@ void chip8_emulate_cycle(Chip8 *data){
                     data->registers[nibble[1]] = data->registers[nibble[2]] - data->registers[nibble[1]] ;
                     break;
 
-                case 6:
+                case 0xe:
                     break;
             }
             break;
@@ -178,8 +178,8 @@ void chip8_emulate_cycle(Chip8 *data){
             uint8_t y = data->registers[nibble[2]];
             uint8_t sprite_len = nibble[3];
             printf("\nsprite_len = 0x%x , %d\n", nibble[3], nibble[3]);
-            x %= 64;
-            y %= 32;
+            x %= EMU_WIDTH;
+            y %= EMU_HEIGHT;
             data->registers[0xF] = 0;
 
             for (uint8_t row=0; row < sprite_len; row++){
@@ -188,10 +188,11 @@ void chip8_emulate_cycle(Chip8 *data){
                 y++;
 
                 for (uint8_t col=0; col < 8; col++){
+                    int frameIndex = x + col + y*EMU_WIDTH;
                     uint8_t pixel = (byte_data & (0x80>>col)) >> (7 - col);
-                    printf("\ni = %d x:%d y:%d\n", x + col + y*64, x, y);
-                    data->frameBuffer[x + col + y*64] ^= pixel * 0xffffffff;
-                    if (data->frameBuffer[x + col + y*64] & pixel){
+                    printf("\ni = %d x:%d y:%d\n", x + col + y*EMU_WIDTH, x, y);
+                    data->frameBuffer[frameIndex] ^= pixel * 0xffffffff;
+                    if (data->frameBuffer[frameIndex] & pixel){
                         data->registers[0xF] = 1;
                     }
 

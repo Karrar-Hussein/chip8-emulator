@@ -6,6 +6,7 @@
 #include "chip8.h"
 
 #define FPS_INTERVAL 1000 / 30
+#define PITCH EMU_WIDTH * 4
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -23,7 +24,7 @@ int main(void){
         return EXIT_FAILURE;
     }
 
-    if(!SDL_CreateWindowAndRenderer("Splash", 64*10, 32*10, 0, &window, &renderer)){
+    if(!SDL_CreateWindowAndRenderer("Splash", EMU_WIDTH*10, EMU_HEIGHT*10, 0, &window, &renderer)){
         fprintf(stderr, "SDL Renderer failed to initialize");
         return EXIT_FAILURE;
     }
@@ -33,7 +34,7 @@ int main(void){
     //TODO: grab Rom Path from command line arguments
     chip8_load_rom(&chip8, "roms/IBM_Logo.ch8");
 
-    pTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 64, 32);
+    pTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, EMU_WIDTH, EMU_HEIGHT);
     SDL_SetTextureScaleMode(pTexture, SDL_SCALEMODE_NEAREST);
 
     while(run){
@@ -54,7 +55,7 @@ int main(void){
 
         // printf("buffer: %x ", chip8.frameBuffer[48]);
         // ABGR8888
-        SDL_UpdateTexture(pTexture, NULL, chip8.frameBuffer, 64*4);
+        SDL_UpdateTexture(pTexture, NULL, chip8.frameBuffer, PITCH);
         // for (int i=0;i<64*32;i++){
             // printf("%d ", chip8.frameBuffer[i]);
         // }
